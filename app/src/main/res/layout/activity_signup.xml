@@ -101,11 +101,11 @@
         app:srcCompat="@drawable/btn_arraw1" />
 
     <TextView
-        android:id="@+id/recovery"
+        android:id="@+id/loginRedirect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Forget your password? Recovery it."
+        android:text="Already have an account? Login"
         android:textColor="#3b608c"
         android:textSize="16sp"
         android:textStyle="bold"
