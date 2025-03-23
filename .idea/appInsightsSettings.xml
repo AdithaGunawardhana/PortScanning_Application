@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.prt.android.portscanningapplication" />
+                  <option name="mobileSdkAppId" value="1:256577565234:android:1070098de9a2802465822b" />
+                  <option name="projectId" value="portscanningapplication" />
+                  <option name="projectNumber" value="256577565234" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

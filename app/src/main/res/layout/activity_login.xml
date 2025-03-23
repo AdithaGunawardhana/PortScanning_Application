@@ -91,7 +91,7 @@
         app:layout_constraintTop_toBottomOf="@+id/btnLogin">
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/buttonFacebook"
+            android:id="@+id/btnFacebook"
             style="android:style/widget.Button"
             android:layout_width="0dp"
             android:layout_height="55dp"
@@ -106,7 +106,7 @@
             android:textStyle="bold" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/buttonGoogle"
+            android:id="@+id/btnGoogle"
             style="android:style/widget.Button"
             android:layout_width="0dp"
             android:layout_height="55dp"
@@ -122,7 +122,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/register"
+        android:id="@+id/signupRedirect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

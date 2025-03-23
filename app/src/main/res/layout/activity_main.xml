@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -26,6 +27,7 @@
             android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
@@ -37,31 +39,18 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginTop="70dp"
-            android:text="Hello"
+            android:text="Hello!"
             android:textColor="#ffffff"
-            android:textSize="18sp"
+            android:textSize="38sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="name"
-            android:textColor="#ffffff"
-            android:textSize="25sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/hello"
-            app:layout_constraintTop_toBottomOf="@+id/hello" />
 
         <ImageView
             android:id="@+id/imageProfile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
-            app:layout_constraintBottom_toBottomOf="@+id/name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/hello"
             app:srcCompat="@drawable/profile" />
@@ -160,14 +149,13 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <EditText
-        android:id="@+id/search"
-        android:layout_width="0dp"
+        android:id="@+id/searchText"
+        android:layout_width="250dp"
         android:layout_height="50dp"
-        android:layout_marginStart="40dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="16sp"
         android:layout_marginEnd="40dp"
         android:background="@drawable/search_edittext"
-        android:drawableEnd="@drawable/search_icon"
         android:drawablePadding="8dp"
         android:ems="10"
         android:hint="Search For..."
@@ -180,17 +168,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
+    <ImageView
+        android:id="@+id/searchIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/constraintLayout2"
+        app:layout_constraintStart_toEndOf="@+id/searchText"
+        app:srcCompat="@drawable/search_icon" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
         android:layout_height="130dp"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="40dp"
         android:background="@drawable/banner_background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/search">
+        app:layout_constraintTop_toBottomOf="@+id/searchText">
 
         <ImageView
             android:id="@+id/logo"
@@ -205,17 +203,17 @@
             android:id="@+id/upgradeAccount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upgrade Your Account"
+            android:text="Upgrade\nYour Account"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/logo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/upgrade" />
+            app:layout_constraintTop_toBottomOf="@+id/upgradeText" />
 
         <TextView
-            android:id="@+id/upgrade"
+            android:id="@+id/upgradeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
@@ -232,7 +230,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="40dp"
         android:layout_marginBottom="32dp"
         android:orientation="vertical"
@@ -296,7 +294,7 @@
                     android:background="@drawable/bottom_background">
 
                     <ImageView
-                        android:id="@+id/btnReport"
+                        android:id="@+id/btnReports"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_margin="16dp"
@@ -332,7 +330,7 @@
                     android:background="@drawable/bottom_background">
 
                     <ImageView
-                        android:id="@+id/btnGeolocation"
+                        android:id="@+id/btnLocation"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_margin="16dp"
@@ -344,10 +342,10 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <TextView
-                    android:id="@+id/geolocation"
+                    android:id="@+id/location"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Geolacations"
+                    android:text="Lacation"
                     android:textAlignment="center"
                     android:textColor="#2e3d6d"
                     android:textSize="14sp"
@@ -406,7 +404,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_margin="16dp"
                     android:layout_weight="1"
                     android:background="@drawable/bottom_background">
