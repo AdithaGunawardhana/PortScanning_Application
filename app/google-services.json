@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "256577565234",
+    "project_id": "portscanningapplication",
+    "storage_bucket": "portscanningapplication.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256577565234:android:1070098de9a2802465822b",
+        "android_client_info": {
+          "package_name": "com.prt.android.portscanningapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDI2tbzhcBA1XuaVsD9s4s3XXptDGc6s5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
