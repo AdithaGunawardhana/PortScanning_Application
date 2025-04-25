@@ -2,6 +2,7 @@ package com.prt.android.portscanningapplication;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
@@ -22,14 +23,17 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -43,10 +47,13 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 2;
     private static final String TAG = "LocationActivity";
     private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
     private TextView locationText;
     private String gatewayIp;
     private GoogleMap googleMap;
-    private LatLng deviceLocation;
+    private Marker locationMarker;
+    private double latitude;
+    private double longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +90,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
             Log.d(TAG, "Requesting location permission...");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            Log.d(TAG, "Location permission already granted, fetching location...");
-            getLocationAndNetworkInfo();
+            Log.d(TAG, "Location permission already granted, starting location updates...");
+            startLocationUpdates();
         }
 
         // Handle window insets for edge-to-edge display
@@ -100,8 +107,8 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Location permission granted, fetching location...");
-                getLocationAndNetworkInfo();
+                Log.d(TAG, "Location permission granted, starting location updates...");
+                startLocationUpdates();
             } else {
                 Log.w(TAG, "Location permission denied");
                 locationText.setText("Location permission denied. Cannot retrieve device location.");
@@ -109,57 +116,72 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         }
     }
 
-    private void getLocationAndNetworkInfo() {
-        StringBuilder locationInfo = new StringBuilder();
-
-        // Get device location
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Fetching device location...");
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            if (location != null) {
-                                Log.d(TAG, "Device location retrieved: Lat=" + location.getLatitude() + ", Lon=" + location.getLongitude());
-                                locationInfo.append("Device Location:\n");
-                                locationInfo.append("Latitude: ").append(location.getLatitude()).append("\n");
-                                locationInfo.append("Longitude: ").append(location.getLongitude()).append("\n\n");
-
-                                // Store device location for the map
-                                deviceLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
-                                // Update the map if it's ready
-                                if (googleMap != null) {
-                                    Log.d(TAG, "Map is ready, updating with device location...");
-                                    updateMap();
-                                } else {
-                                    Log.w(TAG, "Map not ready yet, will update when ready");
-                                }
-                            } else {
-                                Log.w(TAG, "Device location is null");
-                                locationInfo.append("Device Location: Not available (try enabling location services)\n\n");
-                            }
-                            // After getting device location, fetch network location
-                            fetchNetworkLocation(locationInfo);
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to retrieve device location: " + e.getMessage());
-                        locationInfo.append("Device Location: Failed to retrieve (").append(e.getMessage()).append(")\n\n");
-                        fetchNetworkLocation(locationInfo);
-                    });
-        } else {
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "Location permission not granted");
-            locationInfo.append("Device Location: Permission not granted\n\n");
-            fetchNetworkLocation(locationInfo);
+            return;
         }
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000); // Update every 10 seconds
+        locationRequest.setFastestInterval(5000); // Fastest update interval
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    Log.w(TAG, "Location result is null");
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    Log.d(TAG, "Live location update: Lat=" + location.getLatitude() + ", Lon=" + location.getLongitude());
+                    StringBuilder locationInfo = new StringBuilder();
+                    locationInfo.append("Device Location:\n");
+                    locationInfo.append("Latitude: ").append(location.getLatitude()).append("\n");
+                    locationInfo.append("Longitude: ").append(location.getLongitude()).append("\n\n");
+
+                    // Store latitude and longitude for passing to detail activity
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+
+                    // Update the map with the live location
+                    updateMap(new LatLng(location.getLatitude(), location.getLongitude()));
+
+                    // Fetch network location (only once, after first location update)
+                    if (locationText.getText().toString().isEmpty()) {
+                        fetchNetworkLocation(locationInfo);
+                    } else {
+                        updateLocationText(locationInfo.toString());
+                    }
+                }
+            }
+        };
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to start location updates: " + e.getMessage());
+                    locationText.setText("Failed to start location updates: " + e.getMessage());
+                    latitude = 0.0;
+                    longitude = 0.0;
+                    fetchNetworkLocation(new StringBuilder());
+                });
     }
 
     private void fetchNetworkLocation(StringBuilder locationInfo) {
         locationInfo.append("Network Location (Based on Gateway IP):\n");
+
+        // Variables to store network location data
+        String ipAddress = gatewayIp;
+
         if (gatewayIp == null || gatewayIp.equals("0.0.0.0") || gatewayIp.equals("10.0.2.2")) {
             Log.w(TAG, "Gateway IP not suitable for geolocation: " + gatewayIp);
             locationInfo.append("Gateway IP not suitable for geolocation on emulator\n");
+            // For emulator, use mock data or skip API call
+            String finalCountry = "N/A (Emulator)";
+            String finalRegion = "N/A (Emulator)";
+            String finalCity = "N/A (Emulator)";
+            navigateToDetailActivity(ipAddress, finalCity, finalRegion, finalCountry, latitude, longitude);
             updateLocationText(locationInfo.toString());
             return;
         }
@@ -168,6 +190,10 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         Handler handler = new Handler(Looper.getMainLooper());
 
         executor.execute(() -> {
+            String finalCountry = "Unknown";
+            String finalRegion = "Unknown";
+            String finalCity = "Unknown";
+
             try {
                 // Use HTTPS to get geolocation data for the gateway IP
                 String urlString = "https://ip-api.com/json/" + gatewayIp;
@@ -189,25 +215,42 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
 
                 // Parse the JSON response manually (simplified)
                 String json = response.toString();
-                String country = extractJsonField(json, "country");
-                String region = extractJsonField(json, "regionName");
-                String city = extractJsonField(json, "city");
+                finalCountry = extractJsonField(json, "country") != null ? extractJsonField(json, "country") : "Unknown";
+                finalRegion = extractJsonField(json, "regionName") != null ? extractJsonField(json, "regionName") : "Unknown";
+                finalCity = extractJsonField(json, "city") != null ? extractJsonField(json, "city") : "Unknown";
 
                 locationInfo.append("Gateway IP: ").append(gatewayIp).append("\n");
-                if (country != null) locationInfo.append("Country: ").append(country).append("\n");
-                if (region != null) locationInfo.append("Region: ").append(region).append("\n");
-                if (city != null) locationInfo.append("City: ").append(city).append("\n");
+                locationInfo.append("Country: ").append(finalCountry).append("\n");
+                locationInfo.append("Region: ").append(finalRegion).append("\n");
+                locationInfo.append("City: ").append(finalCity).append("\n");
 
             } catch (Exception e) {
                 Log.e(TAG, "Failed to retrieve network location: " + e.getMessage());
                 locationInfo.append("Failed to retrieve network location: ").append(e.getMessage()).append("\n");
             }
 
-            // Update UI on the main thread
-            handler.post(() -> updateLocationText(locationInfo.toString()));
+            // Update UI on the main thread and navigate to detail activity
+            String finalCity1 = finalCity;
+            String finalRegion1 = finalRegion;
+            String finalCountry1 = finalCountry;
+            handler.post(() -> {
+                updateLocationText(locationInfo.toString());
+                navigateToDetailActivity(ipAddress, finalCity1, finalRegion1, finalCountry1, latitude, longitude);
+            });
         });
 
         executor.shutdown();
+    }
+
+    private void navigateToDetailActivity(String ipAddress, String city, String region, String country, double latitude, double longitude) {
+        Intent intent = new Intent(LocationActivity.this, LocationDetailActivity.class);
+        intent.putExtra("IP_ADDRESS", ipAddress != null ? ipAddress : "Unknown");
+        intent.putExtra("CITY", city != null ? city : "Unknown");
+        intent.putExtra("REGION", region != null ? region : "Unknown");
+        intent.putExtra("COUNTRY", country != null ? country : "Unknown");
+        intent.putExtra("LATITUDE", latitude);
+        intent.putExtra("LONGITUDE", longitude);
+        startActivity(intent);
     }
 
     private void updateLocationText(String text) {
@@ -246,29 +289,45 @@ public class LocationActivity extends AppCompatActivity implements OnMapReadyCal
         } else {
             Log.w(TAG, "Location permission not granted, cannot enable My Location layer");
         }
-
-        // Update the map if the device location is already available
-        if (deviceLocation != null) {
-            Log.d(TAG, "Device location available, updating map...");
-            updateMap();
-        } else {
-            Log.w(TAG, "Device location not yet available, waiting...");
-        }
     }
 
-    private void updateMap() {
-        if (googleMap == null || deviceLocation == null) {
-            Log.w(TAG, "Cannot update map: googleMap=" + googleMap + ", deviceLocation=" + deviceLocation);
+    private void updateMap(LatLng latLng) {
+        if (googleMap == null) {
+            Log.w(TAG, "Cannot update map: googleMap is null");
             return;
         }
 
-        Log.d(TAG, "Adding marker at: " + deviceLocation.latitude + ", " + deviceLocation.longitude);
-        // Add a marker at the device's location
-        googleMap.addMarker(new MarkerOptions()
-                .position(deviceLocation)
+        Log.d(TAG, "Updating map with live location: " + latLng.latitude + ", " + latLng.longitude);
+
+        // Remove previous marker if it exists
+        if (locationMarker != null) {
+            locationMarker.remove();
+        }
+
+        // Add a new marker at the updated location
+        locationMarker = googleMap.addMarker(new MarkerOptions()
+                .position(latLng)
                 .title("Your Location"));
 
-        // Move the camera to the device's location and zoom in
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(deviceLocation, 15));
+        // Move the camera to the updated location and zoom in
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop location updates when the activity is paused to save battery
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Restart location updates when the activity is resumed
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startLocationUpdates();
+        }
     }
 }

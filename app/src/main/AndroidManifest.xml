@@ -19,6 +19,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PortScanningApplication"
         tools:targetApi="31">
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NewsletterActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -1,12 +1,14 @@
 package com.prt.android.portscanningapplication;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -21,8 +23,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-
-import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -44,21 +44,26 @@ public class LoginActivity extends AppCompatActivity {
         buttonGoogle = findViewById(R.id.btnGoogle);
         signupRedirectText = findViewById(R.id.signupRedirect);
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                if (!validateEmail() | !validatePassword()) {
-
-                } else {
-                    checkUser();
-                }
+        loginButton.setOnClickListener(view -> {
+            if (!validateEmail() || !validatePassword()) {
+                return;
             }
+            checkUser();
         });
 
-        signupRedirectText.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-                startActivity(intent);
-            }
+        buttonFacebook.setOnClickListener(view -> {
+            Toast.makeText(LoginActivity.this, "Facebook login clicked", Toast.LENGTH_SHORT).show();
+            // Placeholder: Add Facebook login logic here (e.g., Firebase Auth with Facebook)
+        });
+
+        buttonGoogle.setOnClickListener(view -> {
+            Toast.makeText(LoginActivity.this, "Google login clicked", Toast.LENGTH_SHORT).show();
+            // Placeholder: Add Google login logic here (e.g., Firebase Auth with Google)
+        });
+
+        signupRedirectText.setOnClickListener(view -> {
+            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
+            startActivity(intent);
         });
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -69,9 +74,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public Boolean validateEmail() {
-        String val = loginEmail.getText().toString();
-        if (val.isEmpty()){
-            loginEmail.setError("Username cannot be empty");
+        String val = loginEmail.getText().toString().trim();
+        String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
+        if (val.isEmpty()) {
+            loginEmail.setError("Email cannot be empty");
+            return false;
+        } else if (!val.matches(emailPattern)) {
+            loginEmail.setError("Invalid email address");
             return false;
         } else {
             loginEmail.setError(null);
@@ -80,8 +89,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public Boolean validatePassword() {
-        String val = loginPassword.getText().toString();
-        if (val.isEmpty()){
+        String val = loginPassword.getText().toString().trim();
+        if (val.isEmpty()) {
             loginPassword.setError("Password cannot be empty");
             return false;
         } else {
@@ -101,30 +110,27 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    loginEmail.setError(null);
                     for (DataSnapshot userSnapshot : snapshot.getChildren()) {
-                        // Get the user data from the snapshot
                         String passwordFromDB = userSnapshot.child("password").getValue(String.class);
-
                         if (passwordFromDB != null && passwordFromDB.equals(userPassword)) {
-                            loginEmail.setError(null);
-
-                            // Pass the data using Intent
                             String nameFromDB = userSnapshot.child("name").getValue(String.class);
                             String emailFromDB = userSnapshot.child("email").getValue(String.class);
+
+                            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString("email", emailFromDB);
+                            editor.apply();
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("name", nameFromDB);
                             intent.putExtra("email", emailFromDB);
-                            intent.putExtra("password", passwordFromDB);
-
                             startActivity(intent);
-                            return; // Exit after starting the new activity
-                        } else {
-                            loginPassword.setError("Invalid Credentials");
-                            loginPassword.requestFocus();
+                            finish();
+                            return;
                         }
                     }
+                    loginPassword.setError("Invalid password");
+                    loginPassword.requestFocus();
                 } else {
                     loginEmail.setError("User does not exist");
                     loginEmail.requestFocus();
@@ -133,9 +139,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle any errors
+                Toast.makeText(LoginActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
-
 }
